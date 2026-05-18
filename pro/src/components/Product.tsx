@@ -1,4 +1,5 @@
 ﻿import { useState, type ChangeEvent } from "react";
+import Input from "@/components/Input";
 
 type ProductItem = {
   id: number;
@@ -11,6 +12,13 @@ type InfoProps = {
   price: number;
 };
 
+type SortOrder = {
+  code: string;
+  label: string;
+};
+
+
+
 function Info({ name, price }: InfoProps) {
   return (
     <div>
@@ -19,6 +27,12 @@ function Info({ name, price }: InfoProps) {
     </div>
   );
 }
+
+const sortOptions: SortOrder[] = [
+  { code: "default", label: "Default" },
+  { code: "priceAsc", label: "Price: Low to High" },
+  { code: "priceDesc", label: "Price: High to Low" },
+];
 
 const products: ProductItem[] = [
   { id: 1, name: "Product 1", price: 19.99 },
@@ -31,8 +45,9 @@ const products: ProductItem[] = [
 export default function Product() {
   const [count, setCount] = useState(0);
   const [query, setQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<SortOrder>(sortOptions[0]);
 
-  function handleClick() {
+  function handleCountClick() {
     setCount((prev) => prev + 1);
   }
 
@@ -40,33 +55,49 @@ export default function Product() {
     setQuery(event.target.value);
   }
 
+
+
+  function handleSortOrderChange(event: ChangeEvent<HTMLSelectElement>) {
+    setSortOrder(sortOptions.find((option) => option.code === event.target.value) || sortOptions[0]);
+  }
+
   const normalizedQuery = query.trim().toLowerCase();
+
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(normalizedQuery),
   );
 
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sortOrder.code === "priceAsc") return a.price - b.price;
+    if (sortOrder.code === "priceDesc") return b.price - a.price;
+    return 0; // default
+  });
+
   return (
     <div>
       <h2>Product List Practice</h2>
-
-      <input
-        type="text"
+      <Input
         value={query}
         onChange={handleQueryChange}
         placeholder="Search product name"
       />
-      <p>Results: {filteredProducts.length}</p>
-
-      {filteredProducts.length === 0 ? (
+     
+      <select onChange={handleSortOrderChange}>
+        <option value={sortOptions[0].code}>Default</option>
+        <option value={sortOptions[1].code}>Price: Low to High</option>
+        <option value={sortOptions[2].code}>Price: High to Low</option>
+      </select>
+      <p>Results: {sortedProducts.length}</p>
+      {sortedProducts.length === 0 ? (
         <p>No products found.</p>
       ) : (
-        filteredProducts.map((product) => (
+        sortedProducts.map((product) => (
           <Info key={product.id} name={product.name} price={product.price} />
         ))
       )}
 
       <h3>Button Click Count: {count}</h3>
-      <button onClick={handleClick}>Click me</button>
+      <button onClick={handleCountClick}>Click me</button>
     </div>
   );
 }
